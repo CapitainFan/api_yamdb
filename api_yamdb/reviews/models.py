@@ -5,36 +5,35 @@ User = get_user_model()
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    name = models.CharField("Название", max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
         return self.name
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    name = models.CharField("Название", max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
-    name = models.CharField(max_length=200)
-    year = models.IntegerField('Год выпуска', blank=True, null=True)
+    name = models.CharField("Название", max_length=256)
+    description = models.TextField("Описание", null=True, blank=True)
+    year = models.IntegerField('Год выпуска')
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         db_column="category",
         verbose_name="Категория",
-        related_name="title", blank=True, null=True
+        related_name="title", null=True, blank=True,
     )
-#посмотреть отдельную таблицу для связей жанра
-#https://docs.djangoproject.com/en/4.0/ref/models/fields/#django.db.models.ManyToManyField.through
     genre = models.ManyToManyField(
         Genre,
         related_name='title',
-        verbose_name='жанр'
+        verbose_name='Жанр'
     )
 
     def __str__(self):
