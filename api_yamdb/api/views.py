@@ -1,56 +1,40 @@
+# from users.models import User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, viewsets
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import filters, generics, status, viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from django.core.mail import EmailMessage
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-# from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import filters
-from django.http import JsonResponse
 
-from api.serializers import SignupSerializer, UserSerializer, SignupAdminSerializer, CodeSerializer
-# from users.models import User
-from api.confirmation import send_email, code_generation, code_create_or_update, get_tokens_for_user
-from api.permissions import IsAdmin, IsUser
-
-from django.contrib.auth import get_user_model
+from .confirmation import get_tokens_for_user, send_email
+from .permissions import IsAdmin
+from .serializers import (CodeSerializer, SignupAdminSerializer,
+                          SignupSerializer, UserSerializer)
 
 User = get_user_model()
 
 
-
 class UserViewAPI(APIView):
     pass
-#     authentication_classes = (TokenAuthentication,)
-#     permission_classes = (AllowAny,)
-
-#     def get(self, request, *args, **kwargs):
-#         user = User.objects.all()
-#         serializer = UserSerializer(user, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SignupUserAPIView(generics.CreateAPIView):
     """Обработка запроса на регистрацию от нового пользователя"""
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
-    
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        if not User.objects.filter(
-            username=request.data['username'],
-            email=request.data['email']
-        ).exists():
-            if serializer.is_valid():
-                serializer.save()
-                code_create_or_update(serializer.data['username'], serializer.data['email'])
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        code_create_or_update(request.data['username'], request.data['email'])
-        return JsonResponse({'username': request.data['username'], 'email': request.data['email']}, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username']
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        send_email(serializer.validated_data['email'], confirmation_code)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenAuthApiView(generics.CreateAPIView):
@@ -60,16 +44,19 @@ class TokenAuthApiView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User,
-                username=serializer.data['username'],
-                confirmation_code=serializer.data['confirmation_code'])
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username']
+        )
+        if default_token_generator.check_token(
+                user, serializer.validated_data['confirmation_code']):
             token = get_tokens_for_user(user)
-            return JsonResponse({'token': token['access']}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'token': token['access']},
+                                status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+# Переписать user на вьюсет с actions
 class SignupAdminAPIView(generics.CreateAPIView,
                          generics.ListAPIView):
     """Обработка запроса к пользователям от админа"""
@@ -77,9 +64,9 @@ class SignupAdminAPIView(generics.CreateAPIView,
     queryset = User.objects.all()
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    permission_classes = (IsAdmin,) #IsAdmin
+    permission_classes = (IsAdmin, )
 
 
-# Переписать user на вьюсет
+# Переписать user на вьюсет с actions
 # class UserViewSet(viewsets.ModelViewSet):
 #     serializer_class = SignupAdminSerializer
