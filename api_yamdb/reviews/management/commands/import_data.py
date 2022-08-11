@@ -4,11 +4,13 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from reviews.models import Category, Genre, Title
+from users.models import User
 
 IMPORTS = {
     Category: "category.csv",
     Genre: "genre.csv",
     Title: "titles.csv",
+    User: "users.csv",
 
 }
 

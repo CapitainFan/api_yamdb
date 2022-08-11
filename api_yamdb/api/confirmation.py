@@ -2,16 +2,11 @@ import uuid
 from random import choice
 from string import ascii_uppercase
 
-from django.core.mail import EmailMessage
-
-from django.shortcuts import get_object_or_404
-
-from users.models import User
-
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
+from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-
-
+from users.models import User
 
 # def code_generation(user):
 #     return default_token_generator.make_token(user)

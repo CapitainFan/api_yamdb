@@ -1,33 +1,30 @@
-from .serializers import CategorySerializer, GenreSerializer, TitleROSerializer, TitleRWSerializer
-from .mixins import CreateDeleteListViewSet
-from reviews.models import Category, Genre, Title
-from rest_framework import filters, viewsets
-from django_filters.rest_framework import DjangoFilterBackend
+# from users.models import User
+from django.contrib.auth import get_user_model
+# from django.core.mail import EmailMessage
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+# from rest_framework.pagination import LimitOffsetPagination
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-# from django.core.mail import EmailMessage
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-# from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import filters
-from django.http import JsonResponse
 
-from api.serializers import SignupSerializer, UserSerializer, SignupAdminSerializer, CodeSerializer
-# from users.models import User
-from api.confirmation import send_email, code_generation, code_create_or_update, get_tokens_for_user
+from api.confirmation import (code_create_or_update, code_generation,
+                              get_tokens_for_user, send_email)
 from api.permissions import IsAdmin, IsUser
+from api.serializers import (CodeSerializer, SignupAdminSerializer,
+                             SignupSerializer, UserSerializer)
+from reviews.models import Category, Genre, Title
 
-from django.contrib.auth import get_user_model
-
-from rest_framework import viewsets
-from django.shortcuts import get_object_or_404
-from .serializers import CommentSerializer, ReviewSerializer
-from review.models import Title
+from .mixins import CreateDeleteListViewSet
 from .permissions import AuthorAndOthersOrReadOnly
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleROSerializer,
+                          TitleRWSerializer)
 
 User = get_user_model()
 
@@ -119,13 +116,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleROSerializer
         return TitleRWSerializer
-
-
-from rest_framework import viewsets
-from django.shortcuts import get_object_or_404
-from .serializers import CommentSerializer, ReviewSerializer
-from review.models import Title
-from .permissions import AuthorAndOthersOrReadOnly
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

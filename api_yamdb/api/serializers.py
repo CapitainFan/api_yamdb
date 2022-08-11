@@ -1,12 +1,11 @@
-from rest_framework import serializers
-from reviews.models import Category, Genre, Title
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
-from review.models import Comment, Review
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 # from users.models import User
 from django.contrib.auth import get_user_model
-from .confirmation import send_email, code_generation
+from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from reviews.models import Category, Genre, Title, Comment, Review
+
+from .confirmation import code_generation, send_email
 
 User = get_user_model()
 
