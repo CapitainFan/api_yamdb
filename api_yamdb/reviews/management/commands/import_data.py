@@ -29,5 +29,5 @@ class Command(BaseCommand):
                     if table in REPLACE_FIELDS:
                         row[REPLACE_FIELDS[table][1]] = row.pop(
                             REPLACE_FIELDS[table][0])
-                        print(f'saving {row} to {table.__name__}')
+                    print(f'saving {row} to {table.__name__}')
                     table.objects.create(**row)
