@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from reviews.models import Category, Genre, Title
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
-
+from review.models import Comment, Review
+from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
 # from users.models import User
 from django.contrib.auth import get_user_model
 from .confirmation import send_email, code_generation
@@ -144,3 +146,29 @@ class TitleRWSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date')
+        model = Comment
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
+        read_only=True
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+        read_only_fields = ['title']
+
+    def validate_score(self, value):
+        if 0 >= value > 10:
+            raise serializers.ValidationError('Проверьте оценку')
+        return value
