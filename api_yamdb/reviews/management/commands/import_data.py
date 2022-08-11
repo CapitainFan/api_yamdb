@@ -3,7 +3,7 @@ import csv
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
 
 IMPORTS = {
@@ -11,11 +11,15 @@ IMPORTS = {
     Genre: "genre.csv",
     Title: "titles.csv",
     User: "users.csv",
+    Review: "review.csv",
+    Comment: "comments.csv",
 
 }
 
 REPLACE_FIELDS = {
     Title: ['category', 'category_id'],
+    Review: ['author', 'author_id'],
+    Comment: ['author', 'author_id'],
 }
 
 
