@@ -1,9 +1,9 @@
-# from users.models import User
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
-from .confirmation import code_generation, send_email
+# from users.models import User
+from django.contrib.auth import get_user_model
+from .confirmation import send_email, code_generation
 
 User = get_user_model()
 
@@ -11,10 +11,11 @@ RESTRICTED_USERNAME = 'me'
 
 
 class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        exclude = ['password', ]
-        read_only_field = ('id',)
+    pass
+    # class Meta:
+    #     model = User
+    #     exclude = ['password', ]
+    #     read_only_field = ('id',)
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -46,6 +47,16 @@ class SignupSerializer(serializers.ModelSerializer):
                   )
         return value
 
+    # def create(self, validated_data):
+    #     if not User.objects.filter(
+    #         username=validated_data['username'],
+    #         email=validated_data['email']
+    #     ).exists():
+    #         return User.objects.create(**validated_data)
+    #     return User.objects.filter(
+    #         username=validated_data['username'],
+    #         email=validated_data['email'])
+
 
 class SignupAdminSerializer(serializers.ModelSerializer):
     '''Сериализация данных при создании пользователя админом'''
@@ -70,3 +81,26 @@ class SignupAdminSerializer(serializers.ModelSerializer):
                   )
         return value
 
+
+class CodeSerializer(serializers.ModelSerializer):
+    '''Сериализация данных для получени access-токена.'''
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+    )
+    confirmation_code = serializers.CharField(
+        max_length=250,
+        required=True,
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'confirmation_code', ]
+        
+    def validate_confirmation_code(self, value):
+        if value == RESTRICTED_USERNAME:
+            raise serializers.ValidationError(
+                f'Использовать имя {RESTRICTED_USERNAME} '
+                  'в качестве username запрещено.'
+                  )
+        return value

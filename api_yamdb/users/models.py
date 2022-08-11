@@ -50,10 +50,12 @@ class User(AbstractUser):
         null=True,
         verbose_name='Пароль'
     )
-    # confirmation_code = models.CharField(
-    #     blank=True,
-    #     verbose_name='Код подтверждения',
-    # )
+    confirmation_code = models.CharField(
+        max_length=250,
+        blank=True,
+        null=True,
+        verbose_name='Код подтверждения',
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
