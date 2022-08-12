@@ -3,6 +3,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Genre, Title, Comment, Review
 from users.models import User
+import datetime as dt
 
 RESTRICTED_USERNAME = 'me'
 
@@ -118,32 +119,57 @@ class GenreSerializer(serializers.ModelSerializer):
         exclude = ('id', )
 
 
-class TitleROSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(
-        read_only=True,
-        many=True
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = Title
-
-
 class TitleRWSerializer(serializers.ModelSerializer):
+    """Основной метод записи информации."""
+
     category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug', many=False, queryset=Category.objects.all()
     )
     genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        required=False,
+        queryset=Genre.objects.all()
     )
 
     class Meta:
         fields = '__all__'
         model = Title
+
+    def validate_year(self, value):
+        current_year = dt.date.today().year
+        if value > current_year:
+            raise serializers.ValidationError('Проверьте год')
+        return value
+
+
+class TitleROSerializer(serializers.ModelSerializer):
+    """Основной метод получения информации."""
+
+    category = CategorySerializer(many=False, required=True)
+    genre = GenreSerializer(many=True, required=False)
+    rating = serializers.IntegerField()
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
+        model = Title
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
 
 
 class CommentSerializer(serializers.ModelSerializer):

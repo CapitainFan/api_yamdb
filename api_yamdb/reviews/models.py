@@ -1,6 +1,13 @@
 from users.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+import datetime as dt
+
+
+def validate_year(year):
+    now_year = dt.date.today()
+    if year > now_year.year:
+        raise ValueError(f'Некорректный год {year}')
 
 
 class Category(models.Model):
@@ -28,28 +35,43 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField(verbose_name="Название", max_length=256)
-    description = models.TextField(verbose_name="Описание",
-                                   null=True, blank=True)
-    year = models.IntegerField(verbose_name="Год выпуска")
-    category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL,
-        db_column="category",
-        verbose_name="Категория",
-        related_name="title", null=True, blank=True,
-    )
-    genre = models.ManyToManyField(
-        Genre,
-        related_name="title",
-        verbose_name="Жанр"
-    )
+    """Модель Произведение, базовая модель"""
 
-    def __str__(self):
-        return self.name
+    name = models.TextField()
+    year = models.IntegerField(
+        'Год релиза',
+        validators=[validate_year],
+        help_text='Введите год релиза'
+    )
+    genre = models.ManyToManyField(Genre, through='GenreTitle')
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        verbose_name='Категория',
+        help_text='Введите категорию произведения',
+        null=True,
+        blank=True,
+        related_name='titles'
+    )
+    description = models.TextField(
+        null=True,
+        verbose_name='Описание'
+    )
 
     class Meta:
-        verbose_name = "Произведение"
-        verbose_name_plural = "Произведения"
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
