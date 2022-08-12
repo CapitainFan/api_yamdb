@@ -8,9 +8,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .confirmation import get_tokens_for_user, send_email
-from .permissions import IsAdmin
 from .serializers import (CodeSerializer, SignupAdminSerializer,
-                          SignupSerializer, UserSerializer,
+                          SignupSerializer,
                           TitleROSerializer, TitleRWSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
@@ -92,7 +91,7 @@ class GenreViewSet(CreateDeleteListViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related(
         'category').prefetch_related('genre').all()
-    filter_backends = (DjangoFilterBackend,)
+#    filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
     def get_serializer_class(self):
