@@ -150,3 +150,5 @@ media/
 sent_emails/
 
 .sqlite3
+api_yamdb/users/migrations
+api_yamdb/reviews/migrations
