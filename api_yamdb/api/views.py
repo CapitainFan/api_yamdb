@@ -7,6 +7,7 @@ from rest_framework import filters, generics, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from .confirmation import get_tokens_for_user, send_email
 from .serializers import (CodeSerializer, SignupAdminSerializer,
                           SignupSerializer,
@@ -14,7 +15,7 @@ from .serializers import (CodeSerializer, SignupAdminSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
 from reviews.models import Title, Category, Genre
-from .permissions import IsOwnerOrIsAdmin
+from .permissions import IsOwnerOrIsAdmin, IsAdmin
 from .mixins import CreateDeleteListViewSet
 
 User = get_user_model()
@@ -66,8 +67,8 @@ class SignupAdminAPIView(generics.CreateAPIView,
     serializer_class = SignupAdminSerializer
     queryset = User.objects.all()
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
-    # permission_classes = (IsAdmin,) #IsAdmin
+    search_fields = ('username', )
+    permission_classes = (IsAdmin, )
 
 
 # Переписать user на вьюсет
@@ -91,7 +92,7 @@ class GenreViewSet(CreateDeleteListViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related(
         'category').prefetch_related('genre').all()
-#    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
     def get_serializer_class(self):
