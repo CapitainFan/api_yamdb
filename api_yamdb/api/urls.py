@@ -1,6 +1,6 @@
 from api.views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                        ReviewViewSet, SignupAdminAPIView, SignupUserAPIView,
-                       TitleViewSet, UserViewAPI)
+                       TitleViewSet, UserViewAPI, TokenAuthApiView)
 from django.urls import include, path
 from rest_framework import routers
 
@@ -21,7 +21,7 @@ router_v1.register(
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/auth/token/', SignupUserAPIView.as_view()), # Add view here (POST)
+    path('v1/auth/token/', TokenAuthApiView.as_view()), # Add view here (POST)
     path('v1/auth/signup/', SignupUserAPIView.as_view()), # Add mail sending with conf code(POST)
     path('v1/users/', SignupAdminAPIView.as_view()), #  Add pagination here (GET/POST)
     # path('v1/users/<str:username>/', UserViewAPI.as_view()), #  Add view here (GET/PATCH/DELETE)

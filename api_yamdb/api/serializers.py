@@ -5,7 +5,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Genre, Title, Comment, Review
 
-from .confirmation import code_generation, send_email
+from .confirmation import send_email
 
 User = get_user_model()
 
@@ -14,10 +14,6 @@ RESTRICTED_USERNAME = 'me'
 
 class UserSerializer(serializers.ModelSerializer):
     pass
-    # class Meta:
-    #     model = User
-    #     exclude = ['password', ]
-    #     read_only_field = ('id',)
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -48,16 +44,6 @@ class SignupSerializer(serializers.ModelSerializer):
                   'в качестве username запрещено.'
                   )
         return value
-
-    # def create(self, validated_data):
-    #     if not User.objects.filter(
-    #         username=validated_data['username'],
-    #         email=validated_data['email']
-    #     ).exists():
-    #         return User.objects.create(**validated_data)
-    #     return User.objects.filter(
-    #         username=validated_data['username'],
-    #         email=validated_data['email'])
 
 
 class SignupAdminSerializer(serializers.ModelSerializer):
@@ -98,14 +84,6 @@ class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'confirmation_code', ]
-        
-    def validate_confirmation_code(self, value):
-        if value == RESTRICTED_USERNAME:
-            raise serializers.ValidationError(
-                f'Использовать имя {RESTRICTED_USERNAME} '
-                  'в качестве username запрещено.'
-                  )
-        return value
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

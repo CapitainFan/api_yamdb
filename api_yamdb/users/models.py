@@ -44,39 +44,14 @@ class User(AbstractUser):
         default=USER,
         verbose_name='Текущая роль пользователя',
     )
-    password = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        verbose_name='Пароль'
-    )
-    confirmation_code = models.CharField(
-        max_length=250,
-        blank=True,
-        null=True,
-        verbose_name='Код подтверждения',
-    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
-    
     def __str__(self):
         """Строковое представление модели."""
         return self.username
-
-
-    # def has_perm(self, perm, obj=None):
-    #     "Does the user have a specific permission?"
-    #     # Simplest possible answer: Yes, always
-    #     return True
-
-    # def has_module_perms(self, app_label):
-    #     "Does the user have permissions to view the app `app_label`?"
-    #     # Simplest possible answer: Yes, always
-    #     return True

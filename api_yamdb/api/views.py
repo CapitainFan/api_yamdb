@@ -1,5 +1,6 @@
 # from users.models import User
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 # from django.core.mail import EmailMessage
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -13,8 +14,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.confirmation import (code_create_or_update, code_generation,
-                              get_tokens_for_user, send_email)
+from api.confirmation import get_tokens_for_user, send_email
 from api.permissions import IsAdmin, IsUser
 from api.serializers import (CodeSerializer, SignupAdminSerializer,
                              SignupSerializer, UserSerializer)
@@ -29,36 +29,25 @@ from .serializers import (CategorySerializer, CommentSerializer,
 User = get_user_model()
 
 
-
 class UserViewAPI(APIView):
     pass
-#     authentication_classes = (TokenAuthentication,)
-#     permission_classes = (AllowAny,)
-
-#     def get(self, request, *args, **kwargs):
-#         user = User.objects.all()
-#         serializer = UserSerializer(user, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SignupUserAPIView(generics.CreateAPIView):
     """Обработка запроса на регистрацию от нового пользователя"""
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
-    
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        if not User.objects.filter(
-            username=request.data['username'],
-            email=request.data['email']
-        ).exists():
-            if serializer.is_valid():
-                serializer.save()
-                code_create_or_update(serializer.data['username'], serializer.data['email'])
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        code_create_or_update(request.data['username'], request.data['email'])
-        return JsonResponse({'username': request.data['username'], 'email': request.data['email']}, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username']
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        send_email(serializer.validated_data['email'], confirmation_code)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenAuthApiView(generics.CreateAPIView):
@@ -68,14 +57,16 @@ class TokenAuthApiView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User,
-                username=serializer.data['username'],
-                confirmation_code=serializer.data['confirmation_code'])
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username']
+        )
+        if default_token_generator.check_token(
+                user, serializer.validated_data['confirmation_code']):
             token = get_tokens_for_user(user)
-            return JsonResponse({'token': token['access']}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'token': token['access']},
+                                status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignupAdminAPIView(generics.CreateAPIView,
@@ -85,18 +76,20 @@ class SignupAdminAPIView(generics.CreateAPIView,
     queryset = User.objects.all()
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    permission_classes = (IsAdmin,) #IsAdmin
+    # permission_classes = (IsAdmin,) #IsAdmin
 
 
 # Переписать user на вьюсет
 # class UserViewSet(viewsets.ModelViewSet):
 #     serializer_class = SignupAdminSerializer
 
+
 class CategoryViewSet(CreateDeleteListViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
+    permission_classes = (IsAdmin,)
 
 
 class GenreViewSet(CreateDeleteListViewSet):
@@ -104,6 +97,7 @@ class GenreViewSet(CreateDeleteListViewSet):
     serializer_class = GenreSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
+    permission_classes = (IsAdmin,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -111,6 +105,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         'category').prefetch_related('genre').all()
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    permission_classes = (IsAdmin,)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
