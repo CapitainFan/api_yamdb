@@ -101,6 +101,20 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    serializer_class = TitleRWSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filterset_class = TitleFilter
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleROSerializer
+        return TitleRWSerializer
+
+
 # лучше унаследоваться от одного класса
 # чем писать два одинаковых
 class ReviewGenreModelMixin(
@@ -126,20 +140,6 @@ class CategoryViewSet(ReviewGenreModelMixin):
 class GenreViewSet(ReviewGenreModelMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-
-
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
-    serializer_class = TitleRWSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    filterset_class = TitleFilter
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = TitleFilter
-
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return TitleROSerializer
-        return TitleRWSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
