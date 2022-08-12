@@ -9,6 +9,6 @@ class Admin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Title)
 admin.site.register(Review, Admin)
+admin.site.register(Title)
 admin.site.register(Comment)

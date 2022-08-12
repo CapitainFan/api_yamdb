@@ -2,9 +2,7 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Genre, Title, Comment, Review
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from users.models import User
 
 RESTRICTED_USERNAME = 'me'
 

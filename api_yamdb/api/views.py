@@ -1,5 +1,4 @@
 # from users.models import User
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -17,8 +16,8 @@ from .serializers import (CodeSerializer, SignupAdminSerializer,
 from reviews.models import Title, Category, Genre
 from .permissions import IsOwnerOrIsAdmin, IsAdmin
 from .mixins import CreateDeleteListViewSet
-
-User = get_user_model()
+from .filters import TitleFilter
+from users.models import User
 
 
 class UserViewAPI(APIView):
@@ -93,6 +92,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related(
         'category').prefetch_related('genre').all()
     filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
     def get_serializer_class(self):
