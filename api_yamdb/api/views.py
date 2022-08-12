@@ -16,7 +16,7 @@ from .serializers import (CodeSerializer, SignupAdminSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
 from reviews.models import Title, Category, Genre
-from .permissions import (IsOwnerOrIsAdmin, IsAdmin,
+from .permissions import (OwnerOrAdmins, IsAdmin,
                           IsAdminOrReadOnly, AuthorAndStaffOrReadOnly)
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -76,7 +76,7 @@ class SignupAdminAPIView(generics.CreateAPIView,
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsOwnerOrIsAdmin, )
+    permission_classes = (OwnerOrAdmins, )
     filter_backends = (filters.SearchFilter, )
     filterset_fields = ('username')
     search_fields = ('username', )
@@ -130,6 +130,7 @@ class GenreViewSet(ReviewGenreModelMixin):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.select_related(
         'category').prefetch_related('genre').all()
+    permission_class = IsAdminOrReadOnly
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
