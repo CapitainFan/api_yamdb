@@ -21,6 +21,7 @@ from .permissions import (OwnerOrAdmins, IsAdmin,
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from .filters import TitleFilter
+from django.db.models import Avg
 
 
 class UserViewAPI(APIView):
@@ -128,12 +129,12 @@ class GenreViewSet(ReviewGenreModelMixin):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.select_related(
-        'category').prefetch_related('genre').all()
-    permission_class = IsAdminOrReadOnly
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    serializer_class = TitleRWSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filterset_class = TitleFilter
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
