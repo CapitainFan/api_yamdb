@@ -8,7 +8,31 @@ RESTRICTED_USERNAME = 'me'
 
 
 class UserSerializer(serializers.ModelSerializer):
-    pass
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
+
+
+class MeSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
 
 
 class SignupSerializer(serializers.ModelSerializer):
