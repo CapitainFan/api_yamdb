@@ -31,7 +31,8 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(verbose_name="Название", max_length=256)
-    description = models.TextField(verbose_name="Описание", null=True, blank=True)
+    description = models.TextField(verbose_name="Описание",
+                                   null=True, blank=True)
     year = models.IntegerField(verbose_name="Год выпуска")
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
@@ -51,6 +52,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
+
 
 class Review(models.Model):
     title = models.ForeignKey(
@@ -80,6 +82,8 @@ class Review(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
@@ -106,6 +110,10 @@ class Comment(models.Model):
         verbose_name='Дата комментария'
     )
     text = models.TextField()
+
+    class Meta:
+        verbose_name = 'Коментарий'
+        verbose_name_plural = 'Коментарии'
 
     def __str__(self):
         return self.author
