@@ -2,11 +2,10 @@ from users.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, generics, status, viewsets, mixins
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from .confirmation import get_tokens_for_user, send_email
@@ -17,8 +16,10 @@ from .serializers import (CodeSerializer, SignupAdminSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
 from reviews.models import Title, Category, Genre
-from .permissions import IsOwnerOrIsAdmin, IsAdmin
-from .mixins import CreateDeleteListViewSet
+from .permissions import (IsOwnerOrIsAdmin, IsAdmin,
+                          IsAdminOrReadOnly, AuthorAndStaffOrReadOnly)
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from .filters import TitleFilter
 
 
@@ -99,18 +100,31 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(CreateDeleteListViewSet):
+# лучше унаследоваться от одного класса
+# чем писать два одинаковых
+class ReviewGenreModelMixin(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        IsAdminOrReadOnly
+    ]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'slug')
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(ReviewGenreModelMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', )
 
 
-class GenreViewSet(CreateDeleteListViewSet):
+class GenreViewSet(ReviewGenreModelMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -128,7 +142,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_class = IsOwnerOrIsAdmin
+    permission_class = AuthorAndStaffOrReadOnly
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -142,7 +156,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_class = IsOwnerOrIsAdmin
+    permission_class = AuthorAndStaffOrReadOnly
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
