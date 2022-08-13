@@ -1,14 +1,13 @@
 from django.urls import include, path
 from rest_framework import routers
-from rest_framework.authtoken import views
 
-from api.views import SignupUserAPIView, SignupAdminAPIView, TokenAuthApiView
+from api.views import SignupUserAPIView, TokenAuthApiView, UserViewSet
 
+router_v1 = routers.DefaultRouter()
+router_v1.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
-    path('v1/auth/token/', TokenAuthApiView.as_view()),
-    path('v1/auth/signup/', SignupUserAPIView.as_view()),
-    path('v1/users/', SignupAdminAPIView.as_view()), # username и me через utl_path
-    # path('v1/users/<str:username>/', UserViewAPI.as_view()), #  Add view here (GET/PATCH/DELETE)
-    # path('v1/users/me/', UserViewAPI.as_view()), #  Add view here (GET/PATCH)
+    path(r'v1/auth/token/', TokenAuthApiView.as_view()),
+    path(r'v1/auth/signup/', SignupUserAPIView.as_view()),
+    path('v1/', include(router_v1.urls)),
 ]

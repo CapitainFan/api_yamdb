@@ -1,27 +1,22 @@
-# from users.models import User
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .confirmation import get_tokens_for_user, send_email
 from .permissions import IsAdmin
-from .serializers import (CodeSerializer, SignupAdminSerializer,
-                          SignupSerializer, UserSerializer)
+from .serializers import (GettingTokenSerializer, OwnerSerializer, SignupSerializer,
+                          UserSerializer)
 
 User = get_user_model()
 
 
-class UserViewAPI(APIView):
-    pass
-
-
 class SignupUserAPIView(generics.CreateAPIView):
-    """Обработка запроса на регистрацию от нового пользователя"""
+    """Обработка запроса на регистрацию нового пользователя."""
     serializer_class = SignupSerializer
     permission_classes = (AllowAny,)
 
@@ -39,7 +34,7 @@ class SignupUserAPIView(generics.CreateAPIView):
 
 class TokenAuthApiView(generics.CreateAPIView):
     """Получение access-токена."""
-    serializer_class = CodeSerializer
+    serializer_class = GettingTokenSerializer
     permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
@@ -56,17 +51,27 @@ class TokenAuthApiView(generics.CreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-# Переписать user на вьюсет с actions
-class SignupAdminAPIView(generics.CreateAPIView,
-                         generics.ListAPIView):
-    """Обработка запроса к пользователям от админа"""
-    serializer_class = SignupAdminSerializer
+class UserViewSet(viewsets.ModelViewSet):
+    """Обработка запросов к эндпоинтам "users/", "users/username/"."""
+    serializer_class = UserSerializer
     queryset = User.objects.all()
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     permission_classes = (IsAdmin, )
+    lookup_field = 'username'
+    lookup_value_regex = '[^/]+'
 
-
-# Переписать user на вьюсет с actions
-# class UserViewSet(viewsets.ModelViewSet):
-#     serializer_class = SignupAdminSerializer
+    @action(methods=['get', 'patch'], detail=False,
+            permission_classes=[IsAuthenticated, ],
+            url_path='me', url_name='me')
+    def performing_requests_to_me(self, request, pk=None):
+        user = User.objects.get(username=request.user)
+        if request.method == 'GET':
+            serializer = OwnerSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif request.method == 'PATCH':
+            serializer = OwnerSerializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)

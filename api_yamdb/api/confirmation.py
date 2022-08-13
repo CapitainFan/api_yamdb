@@ -1,5 +1,4 @@
 from django.core.mail import EmailMessage
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
 

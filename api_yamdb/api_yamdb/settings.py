@@ -1,6 +1,4 @@
 import os
-
-
 from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -132,9 +130,6 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails/')
 
 
 SIMPLE_JWT = {
-    #'ALGORITHM': 'HS256',
     'AUTH_HEADER_TYPES': ('Bearer',),
-    # 'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
-    'ROTATE_REFRESH_TOKENS': True,
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=15),
 }
