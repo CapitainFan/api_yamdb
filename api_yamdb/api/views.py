@@ -5,27 +5,21 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, viewsets, mixins
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from .confirmation import get_tokens_for_user, send_email
-from .serializers import (CodeSerializer, SignupAdminSerializer,
-                          SignupSerializer, MeSerializer,
-                          UserSerializer,
+from .serializers import (CodeSerializer, SignupSerializer,
+                          UserSerializer, MeSerializer,
                           TitleROSerializer, TitleRWSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
-from reviews.models import Title, Category, Genre
-from .permissions import (OwnerOrAdmins, IsAdmin,
-                          IsAdminOrReadOnly, AuthorAndStaffOrReadOnly)
+from reviews.models import Title, Category, Genre, Review
+from .permissions import (OwnerOrAdmins, IsAdminOrReadOnly,
+                          AuthorAndStaffOrReadOnly)
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from .filters import TitleFilter
 from django.db.models import Avg
-
-
-class UserViewAPI(APIView):
-    pass
 
 
 class SignupUserAPIView(generics.CreateAPIView):
@@ -64,16 +58,6 @@ class TokenAuthApiView(generics.CreateAPIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class SignupAdminAPIView(generics.CreateAPIView,
-                         generics.ListAPIView):
-    """Обработка запроса к пользователям от админа"""
-    serializer_class = SignupAdminSerializer
-    queryset = User.objects.all()
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username', )
-    permission_classes = (IsAdmin, )
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -90,7 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated, )
     )
     def get_patch_me(self, request):
-        user = get_object_or_404(User, username=self.request.user)
+        user = request.user
         if request.method == 'GET':
             serializer = MeSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -115,9 +99,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleRWSerializer
 
 
-# лучше унаследоваться от одного класса
-# чем писать два одинаковых
-class ReviewGenreModelMixin(
+class CLDViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
@@ -132,12 +114,12 @@ class ReviewGenreModelMixin(
     lookup_field = 'slug'
 
 
-class CategoryViewSet(ReviewGenreModelMixin):
+class CategoryViewSet(CLDViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(ReviewGenreModelMixin):
+class GenreViewSet(CLDViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
@@ -161,18 +143,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [AuthorAndStaffOrReadOnly]
 
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         try:
-            review = title.reviews.get(id=self.kwargs.get('review_id'))
+            title = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         except TypeError:
             TypeError('У произведения нет такого отзыва')
-        queryset = review.comments.all()
-        return queryset
+        return title.comments.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         try:
-            review = title.reviews.get(id=self.kwargs.get('review_id'))
+            title = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         except TypeError:
             TypeError('У произведения нет такого отзыва')
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author=self.request.user, review=title)

@@ -1,9 +1,12 @@
 from django.core.mail import EmailMessage
 from rest_framework_simplejwt.tokens import RefreshToken
+from api_yamdb.settings import SUBJECT, SENDEREMAIL
 
 
 def send_email(email, confirmation_code):
     email = EmailMessage(
+        subject=SUBJECT,
+        from_email=SENDEREMAIL,
         body=confirmation_code,
         to=[email, ]
     )

@@ -3,7 +3,6 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Genre, Title, Comment, Review
 from users.models import User
-import datetime as dt
 
 RESTRICTED_USERNAME = 'me'
 
@@ -66,31 +65,6 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
 
-class SignupAdminSerializer(serializers.ModelSerializer):
-    '''Сериализация данных при создании пользователя админом'''
-    username = serializers.CharField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'first_name',
-                  'last_name', 'bio', 'role', ]
-
-    def validate_username(self, value):
-        if value == RESTRICTED_USERNAME:
-            raise serializers.ValidationError(
-                f'Использовать имя {RESTRICTED_USERNAME} '
-                  'в качестве username запрещено.'
-                  )
-        return value
-
-
 class CodeSerializer(serializers.ModelSerializer):
     '''Сериализация данных для получени access-токена.'''
     username = serializers.CharField(
@@ -135,12 +109,6 @@ class TitleRWSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
-
-    def validate_year(self, value):
-        current_year = dt.date.today().year
-        if value > current_year:
-            raise serializers.ValidationError('Проверьте год')
-        return value
 
 
 class TitleROSerializer(serializers.ModelSerializer):
@@ -196,11 +164,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                     'Нельзя оставить отзыв на одно произведение дважды'
                 )
         return data
-
-    def validate_score(self, value):
-        if 0 >= value >= 10:
-            raise serializers.ValidationError('Проверьте оценку')
-        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):

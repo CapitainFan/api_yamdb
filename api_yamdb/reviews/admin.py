@@ -1,7 +1,9 @@
+from atexit import register
 from django.contrib import admin
 from .models import Comment, Review, Title
 
 
+@register(Review)
 class ReviewsAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'score', 'author', 'title')
     search_fields = ('title', 'author')
@@ -9,6 +11,5 @@ class ReviewsAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Review, ReviewsAdmin)
 admin.site.register(Title)
 admin.site.register(Comment)
