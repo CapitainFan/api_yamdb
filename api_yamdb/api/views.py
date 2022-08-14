@@ -1,12 +1,16 @@
-from users.models import User
+from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import filters, generics, status, viewsets, mixins
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+
 from .confirmation import get_tokens_for_user, send_email
 from .serializers import (CodeSerializer, SignupSerializer,
                           UserSerializer, MeSerializer,
@@ -16,10 +20,8 @@ from .serializers import (CodeSerializer, SignupSerializer,
 from reviews.models import Title, Category, Genre, Review
 from .permissions import (OwnerOrAdmins, IsAdminOrReadOnly,
                           AuthorAndStaffOrReadOnly)
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
 from .filters import TitleFilter
-from django.db.models import Avg
+from users.models import User
 
 
 class SignupUserAPIView(generics.CreateAPIView):

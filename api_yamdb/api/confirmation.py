@@ -1,5 +1,5 @@
-from django.core.mail import EmailMessage
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.mail import EmailMessage
 from api_yamdb.settings import SUBJECT, SENDEREMAIL
 
 
