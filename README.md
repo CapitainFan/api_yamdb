@@ -6,8 +6,8 @@
 ### Технологии
 Python 3.7  - https://docs.python.org/release/3.7.0/;  
 Django 2.2.19 - https://docs.djangoproject.com/en/4.1/ ;  
-API - https://docs.python.org/release/3.7.0/distutils/apiref.html?highlight=api;
-DRF - https://www.django-rest-framework.org/
+API - https://docs.python.org/release/3.7.0/distutils/apiref.html?highlight=api;  
+DRF - https://www.django-rest-framework.org/  
 
 ### Как запустить проект:
 Клонировать репозиторий и перейти в него в командной строке:
