@@ -136,4 +136,4 @@ SIMPLE_JWT = {
 }
 
 SUBJECT = 'Good day, this is your token'
-SENDEREMAIL = 'yamdb.com'
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'

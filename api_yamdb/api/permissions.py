@@ -1,13 +1,6 @@
 from rest_framework import permissions
 
 
-class IsAdmin(permissions.BasePermission):
-    message = 'Доступ разрешен только администратору.'
-
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_admin or request.user.is_stuff
-
-
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Разрешение на уровне админ."""
 

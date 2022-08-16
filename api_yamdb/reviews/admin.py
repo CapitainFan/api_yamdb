@@ -1,10 +1,9 @@
-from atexit import register
 from django.contrib import admin
 
 from .models import Comment, Review, Title
 
 
-@register(Review)
+@admin.register(Review)
 class ReviewsAdmin(admin.ModelAdmin):
     list_display = ('pk', 'text', 'score', 'author', 'title')
     search_fields = ('title', 'author')

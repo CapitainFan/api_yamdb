@@ -11,17 +11,18 @@ from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 
+from reviews.models import Title, Category, Genre, Review
+from users.models import User
+
+from .filters import TitleFilter
 from .confirmation import get_tokens_for_user, send_email
+from .permissions import (OwnerOrAdmins, IsAdminOrReadOnly,
+                          AuthorAndStaffOrReadOnly)
 from .serializers import (CodeSerializer, SignupSerializer,
                           UserSerializer, MeSerializer,
                           TitleROSerializer, TitleRWSerializer,
                           ReviewSerializer, CommentSerializer,
                           CategorySerializer, GenreSerializer)
-from reviews.models import Title, Category, Genre, Review
-from .permissions import (OwnerOrAdmins, IsAdminOrReadOnly,
-                          AuthorAndStaffOrReadOnly)
-from .filters import TitleFilter
-from users.models import User
 
 
 class SignupUserAPIView(generics.CreateAPIView):
@@ -145,15 +146,11 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [AuthorAndStaffOrReadOnly]
 
     def get_queryset(self):
-        try:
-            title = get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        except TypeError:
-            TypeError('У произведения нет такого отзыва')
-        return title.comments.all()
+        review = get_object_or_404(Review, id=self.kwargs.get("review_id"),
+                                   title__id=self.kwargs.get("title_id"))
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        try:
-            title = get_object_or_404(Review, id=self.kwargs.get('review_id'))
-        except TypeError:
-            TypeError('У произведения нет такого отзыва')
-        serializer.save(author=self.request.user, review=title)
+        review = get_object_or_404(Review, id=self.kwargs.get("review_id"),
+                                   title__id=self.kwargs.get("title_id"))
+        serializer.save(author=self.request.user, review=review)
