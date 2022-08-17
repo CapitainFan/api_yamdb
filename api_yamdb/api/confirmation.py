@@ -14,5 +14,5 @@ def send_email(email, confirmation_code):
 
 
 def get_tokens_for_user(user):
-    refresh = AccessToken.for_user(user)
-    return str(refresh)
+    access = AccessToken.for_user(user)
+    return str(access)
