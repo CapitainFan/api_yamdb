@@ -1,4 +1,4 @@
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from django.core.mail import EmailMessage
 from django.conf import settings
 
@@ -14,9 +14,5 @@ def send_email(email, confirmation_code):
 
 
 def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
+    refresh = AccessToken.for_user(user)
+    return str(refresh)
